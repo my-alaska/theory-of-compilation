@@ -1,1 +1,1 @@
-# thery-of-compilation
+# theory-of-compilation
