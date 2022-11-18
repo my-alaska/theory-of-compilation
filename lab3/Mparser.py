@@ -2,8 +2,11 @@
 
 import scanner
 import ply.yacc as yacc
+import AST
 
 tokens = scanner.tokens
+
+HAVE_ERRORS = False
 
 precedence = (
 
@@ -147,5 +150,5 @@ def p_matrix_function(p):
                        | ZEROS
                        | ONES"""
 
+# parser = yacc.yacc( )
 
-parser = yacc.yacc()
