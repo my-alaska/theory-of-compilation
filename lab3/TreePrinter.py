@@ -19,7 +19,7 @@ class TreePrinter:
 
     @addToClass(AST.Instructions)
     def printTree(self, indent=0):
-        self.inst.printTree(indent)
+        self.instr.printTree(indent)
         if self.next_instr:
             self.next_instr.printTree(indent)
 
@@ -43,7 +43,7 @@ class TreePrinter:
 
     @addToClass(AST.Identifier)
     def printTree(self, indent=0):
-        print("| " * indent + str(self.value))
+        print("| " * indent + self.id)
 
     @addToClass(AST.BinExpr)
     def printTree(self, indent=0):
@@ -61,9 +61,9 @@ class TreePrinter:
 
     @addToClass(AST.FunctionArgs)
     def printTree(self, indent=0):
-        self.arg.printTree(indent)
-        if self.arg_next:
-            self.arg_next.printTree(indent)
+        self.args.printTree(indent)
+        if self.lastarg:
+            self.lastarg.printTree(indent)
 
 
 
@@ -71,15 +71,14 @@ class TreePrinter:
     @addToClass(AST.Print)
     def printTree(self, indent=0):
         print("| " * indent + "PRINT")
-        for argument in self.print_body:
-            argument.printTree(indent + 1)
+        self.print_body.printTree(indent + 1)
 
 
     @addToClass(AST.PrintBody)
     def printTree(self, indent=0):
-        self.arg.printTree(indent)
-        if self.arg_next:
-            self.arg_next.printTree(indent)
+        self.args.printTree(indent)
+        if self.lastarg:
+            self.lastarg.printTree(indent)
 
 
 
@@ -131,15 +130,19 @@ class TreePrinter:
 
     @addToClass(AST.MatrixBody)
     def printTree(self, indent=0):
-        self.vec.printTree(indent)
-        if self.next_vec:
-            self.next_vec.printTree(indent)
+        if self.lastvec:
+            self.vecs.printTree(indent)
+            print("| " * indent + "VECTOR")
+            self.lastvec.printTree(indent+1)
+        else:
+            print("| " * indent + "VECTOR")
+            self.vecs.printTree(indent+1)
 
-    @addToClass(AST.Vector)
-    def printTree(self, indent=0):
-        print("| " * indent + "VECTOR")
-        if self.body:
-            self.body.printTree(indent + 1)
+    # @addToClass(AST.Vector)
+    # def printTree(self, indent=0):
+    #     print("| " * indent + "VECTOR")
+    #     if self.body:
+    #         self.body.printTree(indent + 1)
 
     @addToClass(AST.VectorBody)
     def printTree(self, indent=0):

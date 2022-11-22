@@ -29,11 +29,11 @@ class String(Node):
 
 
 class Identifier(Node):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, id):
+        self.id = id
 
 class BinExpr(Node):
-    def __init__(self, op, left, right):
+    def __init__(self, left, op, right):
         self.op = op
         self.left = left
         self.right = right
@@ -47,9 +47,9 @@ class Function(Node):
         self.args = args
 
 class FunctionArgs(Node):
-    def __init__(self, arg, arg_next=None):
-        self.arg = arg
-        self.arg_next = arg_next
+    def __init__(self, args, lastarg=None):
+        self.args = args
+        self.lastarg = lastarg
 
 
 
@@ -59,9 +59,9 @@ class Print(Node):
         self.print_body = print_body
 
 class PrintBody(Node):
-    def __init__(self, arg, arg_next=None):
-        self.arg = arg
-        self.arg_next = arg_next
+    def __init__(self, args, lastarg=None):
+        self.args = args
+        self.lastarg = lastarg
 
 
 
@@ -101,13 +101,13 @@ class Matrix(Node):
         self.body = body
 
 class MatrixBody(Node):
-    def __init__(self, vec, next_vec=None):
-        self.vec = vec
-        self.next_vec = next_vec
+    def __init__(self, vecs, lastvec=None):
+        self.vecs = vecs
+        self.lastvec = lastvec
 
-class Vector(Node):
-    def __init__(self, body=None):
-        self.body = body
+# class Vector(Node):
+#     def __init__(self, body=None):
+#         self.body = body
 
 class VectorBody(Node):
     def __init__(self, item, next_item=None):
