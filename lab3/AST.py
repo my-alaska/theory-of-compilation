@@ -100,7 +100,7 @@ class Matrix(Node):
     def __init__(self, body=None):
         self.body = body
 
-class MatrixBody(Node):
+class Vector(Node):
     def __init__(self, vecs, lastvec=None):
         self.vecs = vecs
         self.lastvec = lastvec

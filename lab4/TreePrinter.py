@@ -43,7 +43,7 @@ class TreePrinter:
 
     @addToClass(AST.Identifier)
     def printTree(self, indent=0):
-        print("| " * indent + self.id)
+        print("| " * indent + self.name)
 
     @addToClass(AST.BinExpr)
     def printTree(self, indent=0):
@@ -54,16 +54,21 @@ class TreePrinter:
 
 
 
+    # @addToClass(AST.Function)
+    # def printTree(self, indent=0):
+    #     print("| " * indent + self.name)
+    #     self.args.printTree(indent + 1)
+    #
+    # @addToClass(AST.FunctionArgs)
+    # def printTree(self, indent=0):
+    #     self.args.printTree(indent)
+    #     if self.lastarg:
+    #         self.lastarg.printTree(indent)
+
     @addToClass(AST.Function)
     def printTree(self, indent=0):
         print("| " * indent + self.name)
-        self.args.printTree(indent + 1)
-
-    @addToClass(AST.FunctionArgs)
-    def printTree(self, indent=0):
-        self.args.printTree(indent)
-        if self.lastarg:
-            self.lastarg.printTree(indent)
+        self.arg.printTree(indent + 1)
 
 
 
@@ -128,7 +133,7 @@ class TreePrinter:
         if self.body:
             self.body.printTree(indent + 1)
 
-    @addToClass(AST.Vector)
+    @addToClass(AST.MatrixBody)
     def printTree(self, indent=0):
         if self.lastvec:
             self.vecs.printTree(indent)
@@ -144,17 +149,18 @@ class TreePrinter:
     #     if self.body:
     #         self.body.printTree(indent + 1)
 
-    @addToClass(AST.VectorBody)
+    @addToClass(AST.Vector)
     def printTree(self, indent=0):
-        self.item.printTree(indent)
+        self.items.printTree(indent)
         if self.next_item:
             self.next_item.printTree(indent)
 
     @addToClass(AST.MatrixAccess)
     def printTree(self, indent=0):
         print("| " * indent + "REF")
-        self.identifier.printTree(indent + 1)
-        self.args.printTree(indent + 1)
+        self.name.printTree(indent + 1)
+        self.arg1.printTree(indent + 1)
+        self.arg2.printTree(indent + 1)
 
 
 
