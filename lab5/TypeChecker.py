@@ -104,6 +104,7 @@ type_dict["-"]["vector"][None] = "vector"
 type_dict["-"]["int"][None] = "int"
 type_dict["-"]["float"][None] = "float"
 
+ERRORS = False
 
 class NodeVisitor(object):
 
@@ -147,13 +148,13 @@ class TypeChecker(NodeVisitor):
 
 
     def visit_IntNum(self, node):
-        return 'int'
+        return VarSymbol(None, 'int')
 
     def visit_FloatNum(self, node):
-        return 'float'
+        return VarSymbol(None, 'float')
 
     def visit_String(self, node):
-        return "string"
+        return VarSymbol(None, 'string')
 
 
 
@@ -163,6 +164,7 @@ class TypeChecker(NodeVisitor):
 
     # comparison is treated as BinExpr
     def visit_BinExpr(self, node):
+        global ERRORS
         left = self.visit(node.left)
         right = self.visit(node.right)
         op = node.op
@@ -170,10 +172,13 @@ class TypeChecker(NodeVisitor):
         if type_ == "vector":
             if str(left) == 'vector' and str(right) == 'vector':
                 if left.size != right.size:
+                    ERRORS = True
                     print("vector size mismatch at bin expr  : ", node.lineno)
                 elif left.type_ != right.type_: # TODO użyć słownika
+                    ERRORS = True
                     print("vector type mismatch at bin expr  : ", node.lineno)
         elif type_ is None:
+            ERRORS = True
             print("binary expression error: ", node.lineno)
             return None
         else:
@@ -183,8 +188,10 @@ class TypeChecker(NodeVisitor):
 
 
     def visit_Function(self, node):
+        global ERRORS
         if str(self.visit(node.arg)) == 'int':
             return VarSymbol(None, 'int', 2, size=(node.arg.value, node.arg.value))
+        ERRORS = True
         print("Invalid matrix function: ", node.lineno)
         return None
 
@@ -203,14 +210,17 @@ class TypeChecker(NodeVisitor):
 
 
     def visit_For(self, node):
+        global ERRORS
         self.loopcount += 1
         self.symbol_table = self.symbol_table.pushScope("For")
         type1 = self.visit(node.expr1)
         type2 = self.visit(node.expr2)
         if type1 is None or type2 is None:
+            ERRORS = True
             print("invalid for loop range: ", node.lineno)
 
         if str(type1) != 'int' or str(type2) != 'int':
+            ERRORS = True
             print("invalid for loop access: ", node.lineno)
             t = None
         else:
@@ -242,6 +252,7 @@ class TypeChecker(NodeVisitor):
 
 
     def visit_Assign(self, node):
+        global ERRORS
         val = self.visit(node.val)  # TODO returns node or type?!?!
 
         if val is None:
@@ -252,14 +263,18 @@ class TypeChecker(NodeVisitor):
         else:
             left = self.visit(node.left)
             if left is None:
+                ERRORS = True
                 print("invalid identifier when assigning: ", node.lineno)
                 return None
-            type_ = type_dict[assignment][str(left)][str(val)]
-            if left.dim != 0 and val.dim != 0:
+            type_ = type_dict[assignment[0]][str(left)][str(val)]
+
+            if left.dim != 0 and val.dim != 0: #TODO fix
                 if left.size != val.size:
+                    ERRORS = True
                     print("vector size mismatch at assignment: ", node.lineno)
                     return None
             elif type_ is None:
+                ERRORS = True
                 print("assignment error: ", node.lineno)
                 return None
             else: return type_
@@ -275,24 +290,29 @@ class TypeChecker(NodeVisitor):
         now_type = None
 
         def f(v):
+            global ERRORS
             nonlocal m_len, prev_type, v_len
 
             vector = self.visit(v)
             m_len += 1
             if vector is None:
+                ERRORS = True
                 print("illegal None vector: ", node.lineno)
                 return None
             now_type = vector.type_
             if now_type != prev_type and prev_type is not None:
+                ERRORS = True
                 print("Matrix type mismatch: ", v.lineno)
                 return None
             prev_type = now_type
             if v_len == -1:
                 v_len = vector.size
             elif v_len != vector.size:
+                ERRORS = True
                 print("Matrix vector size mismatch: ", v.lineno)
                 return None
             if vector.dim != 1:
+                ERRORS = True
                 print("Wrong dimension: ", v.lineno)
 
         while isinstance(body,AST.MatrixBody):
@@ -313,11 +333,13 @@ class TypeChecker(NodeVisitor):
         size = 0
 
         def f(i):
+            global ERRORS
             nonlocal size,prev_type
             var = self.visit(i)
             now_type = str(var)
             size += 1
             if (now_type != 'int' and now_type != 'float') or (prev_type != None and now_type != prev_type):
+                ERRORS = True
                 print("Vector type mismatch: ", i.lineno)
                 return None
             prev_type = now_type
@@ -334,7 +356,9 @@ class TypeChecker(NodeVisitor):
 
 
     def visit_MatrixAccess(self, node):
+        global ERRORS
         if str(self.visit(node.arg1)) != 'int' or str(self.visit(node.arg1)) != 'int':
+            ERRORS = True
             print("Invalid matrix access: ", node.lineno)
             return None
         return self.visit(node.name)
@@ -344,25 +368,38 @@ class TypeChecker(NodeVisitor):
 
 
     def visit_Transpose(self, node):
+        global ERRORS
         vector = self.visit(node.arg)
         if str(vector) != 'vector':
+            ERRORS = True
             print("Invalid object transposition: ", node.lineno)
             return None
         if vector.dim == 1 or vector.dim == 2:
             return VarSymbol(None, vector.type_, vector.dim, size=(vector.size[1], vector.size[0]))
         else:
+            ERRORS = True
             print("invalid vector dimension: ", node.lineno)
             return None
 
     def visit_UnaryMinus(self, node):
+        global ERRORS
         expr = self.visit(node.arg)
-        expr_type = self.symbol_table['-'][expr][None]  # TODO maybe str() ???
+        expr_type = self.symbol_table['-'][expr][None]
         if expr_type is None:
+            ERRORS = True
             print("invalid type for uminus operation: ", node.lineno)
 
     def visit_Return(self, node):
         return self.visit(node.instr)
 
-    def visit_BreakContinue(self, node):
+    def visit_Break(self, node):
+        global ERRORS
         if self.loopcount == 0:
-            print("Break/Continue outside of loop: ", node.lineno)
+            ERRORS = True
+            print("Break outside of loop: ", node.lineno)
+
+    def visit_Continue(self, node):
+        global ERRORS
+        if self.loopcount == 0:
+            ERRORS = True
+            print("Continue outside of loop: ", node.lineno)
